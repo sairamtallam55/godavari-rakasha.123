@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isSuperAdmin() {
+      return isAuthenticated() && (request.auth.token.role == 'super_admin' || request.auth.token.email.matches('.*@godavariraksha[.]gov[.]in'));
+    }
+
+    function isControlOperator() {
+      return isAuthenticated() && (request.auth.token.role in ['control_operator', 'super_admin']);
+    }
+
+    function isFieldResponder() {
+      return isAuthenticated() && (request.auth.token.role in ['police_responder', 'medical_responder', 'fire_responder', 'control_operator', 'super_admin']);
+    }
+
+    // Incidents collection
+    match /incidents/{incidentId} {
+      allow read: if true;
+      allow create: if true; // Any pilgrim can report SOS
+      allow update: if isFieldResponder() || isControlOperator();
+      allow delete: if isSuperAdmin();
+    }
+
+    // Response teams collection
+    match /responseTeams/{teamId} {
+      allow read: if true;
+      allow write: if isFieldResponder() || isControlOperator();
+    }
+
+    // Ghats & Facilities
+    match /ghatLocations/{ghatId} {
+      allow read: if true;
+      allow write: if isControlOperator() || isSuperAdmin();
+    }
+
+    match /emergencyFacilities/{facilityId} {
+      allow read: if true;
+      allow write: if isControlOperator() || isSuperAdmin();
+    }
+
+    // Missing Persons (Private & Protected)
+    match /missingPersons/{reportId} {
+      allow read: if isFieldResponder() || isControlOperator();
+      allow create: if true;
+      allow update: if isFieldResponder() || isControlOperator();
+      allow delete: if isSuperAdmin();
+    }
+
+    // Family Groups (Consent-Based)
+    match /familyGroups/{groupId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // AI Alerts & IoT Sensor Readings
+    match /aiAlerts/{alertId} {
+      allow read: if isControlOperator();
+      allow write: if isControlOperator();
+    }
+
+    match /riverReadings/{readingId} {
+      allow read: if true;
+      allow write: if isControlOperator() || isSuperAdmin();
+    }
+
+    match /announcements/{announcementId} {
+      allow read: if true;
+      allow write: if isControlOperator() || isSuperAdmin();
+    }
+  }
+}

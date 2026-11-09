@@ -1,0 +1,6 @@
+{
+  "name": "Godavari Raksha",
+  "description": "AI-Powered Smart Pilgrim Safety, Emergency Response & Disaster Management Ecosystem for Godavari Pushkaralu 2027 by RMC & RTIH.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
